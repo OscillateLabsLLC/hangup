@@ -19,9 +19,11 @@ from ovos_workshop.skills.ovos import OVOSSkill
 
 
 class HangupSkill(OVOSSkill):
+    """Receives Switchboard's declines: records each one and stays silent."""
     # Interface contract with Switchboard, not user settings: changing either on one side alone breaks routing.
     DECLINE_INTENT = "decline"
     DECLINED_EVENT = "hangup.declined"
+    DESCRIBED_KEYS = frozenset({"utterance", "utterances", "lang", "reason", "stage"})
 
     def initialize(self):
         # ovos-workshop >= 8 reports intent_name in the done-signal; Neon Hub's 0.1.7 has no such parameter.
@@ -35,7 +37,8 @@ class HangupSkill(OVOSSkill):
         Past max_log_bytes the file moves to <name>.1, replacing the previous backup."""
         name = self.settings.get("log_file", "declines.jsonl")
         path = os.path.join(self.file_system.path, name)
-        if self.file_system.exists(name) and os.path.getsize(path) > int(self.settings.get("max_log_bytes", 5_000_000)):
+        max_bytes = int(self.settings.get("max_log_bytes", 5_000_000))
+        if self.file_system.exists(name) and os.path.getsize(path) > max_bytes:
             os.replace(path, f"{path}.1")
         with self.file_system.open(name, "a") as f:
             f.write(json.dumps(record, default=str) + "\n")
@@ -51,7 +54,7 @@ class HangupSkill(OVOSSkill):
             "lang": data.get("lang"),
             "reason": data.get("reason"),  # e.g. "ignore", "decline_class", "gate"
             "stage": data.get("stage"),
-            "detail": {k: v for k, v in data.items() if k not in {"utterance", "utterances", "lang", "reason", "stage"}},
+            "detail": {k: v for k, v in data.items() if k not in self.DESCRIBED_KEYS},
             "session_id": session.get("session_id"),
         }
 
@@ -60,5 +63,5 @@ class HangupSkill(OVOSSkill):
         record = self.describe(message)
         if self.settings.get("log_declines", True):
             self.record_decline(record)
-        self.log.info(f"declined to participate: {record['utterance']!r} ({record['reason']}, {record['stage']})")
+        self.log.info("declined to participate: %r (%s, %s)", record["utterance"], record["reason"], record["stage"])
         self.bus.emit(message.forward(self.DECLINED_EVENT, record))

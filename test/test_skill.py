@@ -8,12 +8,13 @@ from ovos_utils.fakebus import FakeBus
 
 from ovos_skill_hangup import HangupSkill
 
+
 SKILL_ID = "ovos-skill-hangup.oscillatelabsllc"
 DECLINE_TOPIC = f"{SKILL_ID}:{HangupSkill.DECLINE_INTENT}"
 
 
-@pytest.fixture
-def skill(tmp_path, monkeypatch):
+@pytest.fixture(name="skill")
+def skill_fixture(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
     s = HangupSkill(skill_id=SKILL_ID, bus=FakeBus())
@@ -29,7 +30,8 @@ def collect(bus, *topics):
 
 
 def decline(skill, **data):
-    msg = Message(DECLINE_TOPIC, {"lang": "en-us", **data}, {"session": {"session_id": "default"}, "skill_id": SKILL_ID})
+    context = {"session": {"session_id": "default"}, "skill_id": SKILL_ID}
+    msg = Message(DECLINE_TOPIC, {"lang": "en-us", **data}, context)
     skill.bus.emit(msg)
 
 
@@ -83,7 +85,7 @@ def test_log_moves_to_backup_past_size(tmp_path, monkeypatch):
         while time.time() < deadline and len(seen["mycroft.skill.handler.complete"]) < 2:
             time.sleep(0.05)
         log = Path(s.file_system.path) / "declines.jsonl"
-        assert json.loads(log.read_text())["utterance"] == "second"
-        assert json.loads(Path(f"{log}.1").read_text())["utterance"] == "first"
+        assert json.loads(log.read_text(encoding="utf-8"))["utterance"] == "second"
+        assert json.loads(Path(f"{log}.1").read_text(encoding="utf-8"))["utterance"] == "first"
     finally:
         s.shutdown()
