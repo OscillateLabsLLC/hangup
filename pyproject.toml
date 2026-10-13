@@ -7,7 +7,7 @@ name = "ovos-skill-hangup"
 dynamic = ["version"]
 description = "An OVOS skill that silently absorbs utterances Switchboard declines, logging each decline and speaking nothing"
 readme = "README.md"
-license = "LicenseRef-Proprietary"
+license = "Apache-2.0"
 authors = [
     { name = "Oscillate Labs", email = "mike@oscillatelabs.net" }
 ]
@@ -17,9 +17,13 @@ classifiers = [
     "Private :: Do Not Upload",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Multimedia :: Sound/Audio :: Speech",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 # Both ovos-workshop APIs: 0.x (Neon Hub pins and runs 0.1.7) and current OVOS (9.x).
 dependencies = [
     "ovos-bus-client>=0.1.6",
