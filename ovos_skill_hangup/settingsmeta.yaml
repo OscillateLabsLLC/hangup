@@ -1,0 +1,16 @@
+skillMetadata:
+  sections:
+    - name: Decline log
+      fields:
+        - name: log_declines
+          type: checkbox
+          label: Record each declined utterance to a file
+          value: true
+        - name: log_file
+          type: text
+          label: Log file name (in the skill's data directory)
+          value: "declines.jsonl"
+        - name: max_log_bytes
+          type: number
+          label: Move the log to <name>.1 past this size (bytes)
+          value: 5000000
