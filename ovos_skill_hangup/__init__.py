@@ -11,9 +11,8 @@ completion signal and the round ends cleanly.
 
 import inspect
 import json
-import logging
+import os
 import time
-from logging.handlers import RotatingFileHandler
 
 from ovos_bus_client.message import Message
 from ovos_workshop.skills.ovos import OVOSSkill
@@ -25,26 +24,21 @@ class HangupSkill(OVOSSkill):
     DECLINED_EVENT = "hangup.declined"
 
     def initialize(self):
-        self.decline_log = self._make_decline_log()
         # ovos-workshop >= 8 reports intent_name in the done-signal; Neon Hub's 0.1.7 has no such parameter.
         extra = {"intent_name": self.DECLINE_INTENT} \
             if "intent_name" in inspect.signature(self.add_event).parameters else {}
         self.add_event(f"{self.skill_id}:{self.DECLINE_INTENT}", self.handle_decline,
                        handler_info="mycroft.skill.handler", activation=False, speak_errors=False, **extra)
 
-    def _make_decline_log(self):
-        """A JSON-lines decline log in the skill's data directory, rotated by the standard library."""
-        logger = logging.getLogger(f"{self.skill_id}.declines")
-        logger.propagate = False
-        logger.handlers.clear()
-        if self.settings.get("log_declines", True):
-            path = f"{self.file_system.path}/{self.settings.get('log_file', 'declines.jsonl')}"
-            handler = RotatingFileHandler(path, maxBytes=int(self.settings.get("max_log_bytes", 5_000_000)),
-                                          backupCount=int(self.settings.get("log_backups", 1)), encoding="utf-8")
-            handler.setFormatter(logging.Formatter("%(message)s"))
-            logger.addHandler(handler)
-        logger.setLevel(logging.INFO)
-        return logger
+    def record_decline(self, record: dict):
+        """Append one JSON line to the decline log in the skill's data directory (self.file_system).
+        Past max_log_bytes the file moves to <name>.1, replacing the previous backup."""
+        name = self.settings.get("log_file", "declines.jsonl")
+        path = os.path.join(self.file_system.path, name)
+        if self.file_system.exists(name) and os.path.getsize(path) > int(self.settings.get("max_log_bytes", 5_000_000)):
+            os.replace(path, f"{path}.1")
+        with self.file_system.open(name, "a") as f:
+            f.write(json.dumps(record, default=str) + "\n")
 
     def describe(self, message: Message) -> dict:
         """What was declined and why, from Switchboard's dispatch."""
@@ -64,6 +58,7 @@ class HangupSkill(OVOSSkill):
     def handle_decline(self, message: Message):
         """Never speaks. Records the decline and tells the bus."""
         record = self.describe(message)
-        self.decline_log.info(json.dumps(record, default=str))
+        if self.settings.get("log_declines", True):
+            self.record_decline(record)
         self.log.info(f"declined to participate: {record['utterance']!r} ({record['reason']}, {record['stage']})")
         self.bus.emit(message.forward(self.DECLINED_EVENT, record))

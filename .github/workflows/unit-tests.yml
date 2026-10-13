@@ -24,19 +24,18 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Set up Python ${{ matrix.python-version }}
-        run: uv python install ${{ matrix.python-version }}
-
+      # A venv, not --system: the runner's Python is externally managed (PEP 668) and refuses installs.
+      # Package and workshop pin install together so the resolver satisfies both.
       - name: Install dependencies
         run: |
-          uv pip install --system -e ".[test,dev]"
-          uv pip install --system "ovos-workshop${{ matrix.ovos-workshop }}"
+          uv venv --python ${{ matrix.python-version }}
+          uv pip install -e ".[test,dev]" "ovos-workshop${{ matrix.ovos-workshop }}"
 
       - name: Show resolved ovos-workshop
-        run: python -c "import importlib.metadata as m; print('ovos-workshop', m.version('ovos-workshop'))"
+        run: .venv/bin/python -c "import importlib.metadata as m; print('ovos-workshop', m.version('ovos-workshop'))"
 
       - name: Run tests
-        run: pytest
+        run: .venv/bin/pytest
 
       - name: Ruff
-        run: ruff check .
+        run: .venv/bin/ruff check .

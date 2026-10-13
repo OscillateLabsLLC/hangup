@@ -69,3 +69,21 @@ def test_file_logging_can_be_disabled(tmp_path, monkeypatch):
 
 def test_registers_no_intents(skill):
     assert not skill.intent_service.registered_intents
+
+
+def test_log_moves_to_backup_past_size(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    s = HangupSkill(skill_id=SKILL_ID, bus=FakeBus(), settings={"max_log_bytes": 1})
+    try:
+        seen = collect(s.bus, "mycroft.skill.handler.complete")
+        for text in ("first", "second"):
+            decline(s, utterance=text, reason="ignore", stage="llm")
+        deadline = time.time() + 5
+        while time.time() < deadline and len(seen["mycroft.skill.handler.complete"]) < 2:
+            time.sleep(0.05)
+        log = Path(s.file_system.path) / "declines.jsonl"
+        assert json.loads(log.read_text())["utterance"] == "second"
+        assert json.loads(Path(f"{log}.1").read_text())["utterance"] == "first"
+    finally:
+        s.shutdown()

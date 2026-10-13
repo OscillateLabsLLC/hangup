@@ -30,8 +30,7 @@ Python 3.11-3.14. Works with ovos-workshop 0.x and current OVOS (9.x).
 |---|---|---|
 | `log_declines` | `true` | record each declined utterance to a file |
 | `log_file` | `declines.jsonl` | log file name, in the skill's data directory |
-| `max_log_bytes` | 5000000 | rotate the log past this size |
-| `log_backups` | 1 | rotated log files to keep |
+| `max_log_bytes` | 5000000 | past this size the log moves to `<log_file>.1` (one backup) |
 
 ## License
 
