@@ -1,36 +1,36 @@
 # Hangup
 
-An OVOS skill that silently absorbs utterances [Switchboard](https://github.com/OscillateLabsLLC/switchboard) declines.
+An OVOS skill that says nothing. [Switchboard](https://github.com/OscillateLabsLLC/switchboard) sends it the speech
+that wasn't meant for the assistant.
 
-A voice assistant hears a lot that isn't meant for it: conversation in the room, the TV, its own voice. In stock
-OVOS, anything the intent pipeline can't place falls through to fallback skills, and those *speak* ("I don't
-understand", or an LLM answer to a sentence nobody asked). That's the false trigger households find most irritating.
+A voice assistant hears a lot that isn't for it: people talking in the room, the TV, its own voice. In stock OVOS,
+anything no skill claims falls through to fallback skills, and those *answer*: "I don't understand", or an LLM's
+reply to a sentence nobody asked. That's the false trigger households find most annoying.
 
-When Switchboard decides speech wasn't meant for the assistant, it dispatches it to Hangup instead. Hangup:
+When Switchboard decides speech wasn't for the assistant, it sends it to Hangup instead. Hangup:
 
-- **speaks nothing**,
-- appends a JSON line to `declines.jsonl` in its data directory (utterance, reason, pipeline stage, details),
-- emits `hangup.declined` on the bus for anything that wants to observe.
+- **says nothing**,
+- adds a line to `declines.jsonl` in its data folder (what was heard, why it was declined, and by which step),
+- announces `hangup.declined` on the bus, for anything that wants to watch.
 
-Hangup registers no intents, so no matcher can route to it by accident. The only way in is a dispatch to
-`ovos-skill-hangup.oscillatelabsllc:decline`. The handler runs through ovos-workshop's event machinery, so
-ovos-core's dispatcher gets its normal completion signal and the round ends cleanly.
+Hangup registers no intents, so nothing can reach it by accident; only Switchboard sends to it. Switchboard needs
+Hangup installed.
 
 ## Install
 
 ```sh
-pip install git+https://github.com/OscillateLabsLLC/hangup
+pip install ovos-skill-hangup
 ```
 
-Python 3.11-3.14. Works with ovos-workshop 0.x and current OVOS (9.x).
+Python 3.11-3.14. Works with ovos-workshop 0.x (Neon) and current OVOS.
 
 ## Settings
 
 | key | default | meaning |
 |---|---|---|
-| `log_declines` | `true` | record each declined utterance to a file |
-| `log_file` | `declines.jsonl` | log file name, in the skill's data directory |
-| `max_log_bytes` | 5000000 | past this size the log moves to `<log_file>.1` (one backup) |
+| `log_declines` | `true` | write each declined utterance to the log |
+| `log_file` | `declines.jsonl` | the log's file name, in the skill's data folder |
+| `max_log_bytes` | 5000000 | above this size the log moves to `<log_file>.1` (one backup is kept) |
 
 ## License
 
