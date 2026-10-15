@@ -1,5 +1,7 @@
 # Hangup
 
+[![Status: Active](https://img.shields.io/badge/status-active-brightgreen)](https://github.com/OscillateLabsLLC/.github/blob/main/SUPPORT_STATUS.md)
+
 An OVOS skill that says nothing. [Switchboard](https://github.com/OscillateLabsLLC/switchboard) sends it the speech
 that wasn't meant for the assistant.
 
