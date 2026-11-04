@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1](https://github.com/OscillateLabsLLC/hangup/compare/v1.0.0...v1.0.1) (2026-11-04)
+
+
+### Bug Fixes
+
+* **deps:** bump certifi to 2026.10.23 ([b5f9e8c](https://github.com/OscillateLabsLLC/hangup/commit/b5f9e8c7f7aadedb2b71cf307d08f5316b327dcd))
+* **deps:** bump certifi to 2026.10.23 ([0d8e8bf](https://github.com/OscillateLabsLLC/hangup/commit/0d8e8bfaba1ded7ad4d92b96fa436eded7ea36e7))
+
 ## 1.0.0 (2026-10-15)
 
 
